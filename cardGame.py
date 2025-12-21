@@ -20,6 +20,7 @@ class Card:
         self.value = str(value)
         self.suit = suit
         self.owner: Player = None
+        self.special = None  # Usefull flag
 
     def __int__(self):
         return int(self.value)
@@ -74,6 +75,12 @@ class Deck(list[Card]):
         if not isinstance(card, Card):
             card = Card(card)
         return super().remove(card)
+
+    def getNormalCards(self):
+        return [c for c in self if not c.special]
+
+    def getSpecialCards(self):
+        return [c for c in self if c.special]
 
     def __str__(self):
         return ", ".join(map(str, self))
@@ -168,3 +175,19 @@ class Game(ABC):
     def input(self, prompt):
         prompt = "  " * self.tabLevel + prompt
         return input(prompt)
+
+    def choosePlayer(self, chooser: Player, canChooseSelf=True) -> Player:
+        options = self.playersNotDone()
+        if not canChooseSelf and chooser in options:
+            options.remove(chooser)
+        while True:
+            self.log(chooser, "chooses a player:")
+            for i, p in enumerate(options):
+                self.log(i + 1, p, sep=") ")
+            try:
+                i = int(self.input("Choice: "))
+                player = options[i - 1]
+                break
+            except (ValueError, IndexError):
+                self.log("Invalid choice!")
+        return player

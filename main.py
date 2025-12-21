@@ -1,4 +1,4 @@
-from cardGame import Game, Deck, Hand, Player, Card, Colors
+from cardGame import Game, Deck, Player, Card, Colors
 
 
 class Flip7(Game):
@@ -13,6 +13,7 @@ class Flip7(Game):
         super().__init__(playerNames)
         self.effectsToResolve: list[Card] = []
         self.maxScore = 200  # First to reach 200 or more wins
+        self.showProbability = False
 
     def newDeck(self):
         deck = Deck()
@@ -21,7 +22,7 @@ class Flip7(Game):
             deck.addCard(i, copies=max(i, 1))
 
         for c in deck:
-            setattr(c, "isNumber", True)
+            c.special = False
 
         # Extra cards
         deck.addCard(Flip7.FREEZE, 3)
@@ -32,18 +33,21 @@ class Flip7(Game):
             deck.addCard(f"+{2 * i}")
 
         for c in deck:
-            if not hasattr(c, "isNumber"):
-                setattr(c, "isNumber", False)
+            if c.special is None:
+                c.special = True
 
         return deck
 
     def doTurn(self, player: Player, threeTurn=False):
-        bustChance = f"{round(self.matchProbability(player) * 100)}%"
+        if self.showProbability:
+            bustChance = f" ({round(self.matchProbability(player) * 100)}%)"
+        else:
+            bustChance = ""
 
         if threeTurn:
-            self.log(f"Card nr {threeTurn} ({bustChance})")
+            self.log(f"Card nr {threeTurn}{bustChance}")
         else:
-            self.log(f"{player}'s turn ({bustChance}):")
+            self.log(f"{player}'s turn{bustChance}:")
         self.log(player.hand)
 
         if threeTurn:
@@ -66,7 +70,7 @@ class Flip7(Game):
                 else:
                     self.endRoundFor(player)
 
-            if len(self.getNumbersOnlyHand(player)) == 7:
+            if len(player.hand.getNormalCards()) == 7:
                 self.endRoundFor(player)
 
             elif newCard in Flip7.EFFECTS:
@@ -104,16 +108,9 @@ class Flip7(Game):
     def resolveEffect(self, effectCard: Card):
         self.tabLevel += 1
         self.log("Resolving", effectCard)
-        while True:
-            self.log(effectCard.owner, "chooses a player:")
-            for i, p in enumerate(self.playersNotDone()):
-                self.log(i + 1, p, sep=") ")
-            try:
-                i = int(self.input("Choice: "))
-                player = self.playersNotDone()[i - 1]
-                break
-            except (ValueError, IndexError):
-                self.log("Invalid choice!")
+
+        # Card owner chooses a player
+        player = self.choosePlayer(effectCard.owner)
 
         if effectCard.value == Flip7.FREEZE:
             self.log(player, "is frozen!", color=Colors.BLUE)
@@ -125,19 +122,12 @@ class Flip7(Game):
 
         self.tabLevel -= 1
 
-    def getNumbersOnlyHand(self, player):
-        onlyNumbersHand = Hand()
-        for c in player.hand:
-            if c.isNumber:
-                onlyNumbersHand.addCard(c)
-        return onlyNumbersHand
-
-    def playerHasMatch(self, player, newCard=None):
-        onlyNumbersHand = self.getNumbersOnlyHand(player)
+    def playerHasMatch(self, player: Player, newCard=None):
+        onlyNumbersHand = player.hand.getNormalCards()
 
         if newCard is not None:
-            if newCard.isNumber:
-                onlyNumbersHand.addCard(newCard)
+            if not newCard.special:
+                onlyNumbersHand.append(newCard)
 
         # Check if there are any matches by converting to set
         return len(onlyNumbersHand) != len(set(onlyNumbersHand))
@@ -152,16 +142,16 @@ class Flip7(Game):
                 nrMatches += 1
         return nrMatches / len(self.deck)
 
-    def getPlayerHandScore(self, player):
+    def getPlayerHandScore(self, player: Player):
         if self.playerHasMatch(player):
             return 0
         else:
             score = 0
-            if len(self.getNumbersOnlyHand(player)) == 7:
+            if len(player.hand.getNormalCards()) == 7:
                 score += 15
 
             for c in player.hand:
-                if c.isNumber or "+" in c.value:
+                if not c.special or "+" in c.value:
                     score += int(c)
                 if c.value == Flip7.TIMES_TWO:
                     score *= 2
