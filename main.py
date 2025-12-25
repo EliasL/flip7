@@ -7,11 +7,10 @@ from cardGame import (
     ActionType,
     Action,
     Observation,
-    Strategy,
     RandomStrategy,
 )
 
-from display import CursesDisplay, HumanCursesStrategy, DisplayWrapperStrategy
+from display import CursesDisplay, HumanCursesStrategy, DisplayWrapperStrategy  # noqa: F401
 
 
 class Flip7(Game):

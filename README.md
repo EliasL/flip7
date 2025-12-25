@@ -1,7 +1,7 @@
 
 # Flip7
 
-This is a card game a bit like black jack: You choose to draw a card or pass. If you get a number you already have, you bust. When you pass, you recieve the sum of your cards as your score. [Additional rules.](https://cdn.shopify.com/s/files/1/0611/3958/3198/files/25_FLIP_7_TB_RULES_C_Rev_9_2_25_ND.pdf?v=1756935535)
+This is a card game a bit like blackjack: You choose to draw a card or pass. If you get a number you already have, you bust. When you pass, you receive the sum of your cards as your score. [Additional rules.](https://cdn.shopify.com/s/files/1/0611/3958/3198/files/25_FLIP_7_TB_RULES_C_Rev_9_2_25_ND.pdf?v=1756935535)
 
 ## Setup
 
