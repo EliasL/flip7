@@ -1,3 +1,4 @@
+import sys
 from cardGame import (
     Game,
     Deck,
@@ -413,16 +414,24 @@ class Flip7(Game):
 
 
 if __name__ == "__main__":
-    game = Flip7(["Elias", "Håvard"])
+    # Player names are taken from command-line arguments
+    # Example: python main.py Alice Bob Charlie
+    player_names = sys.argv[1:]
+
+    if not player_names:
+        player_names = ["Eloise", "Jules", "Thibault", "Paul", "Elias"]
+
+    game = Flip7(player_names)
     game.showBustChance = False
     # game.maxScore = 20
 
     ui = CursesDisplay(game)
 
-    game.players[0].strategy = HumanCursesStrategy(ui)
-    game.players[1].strategy = HumanCursesStrategy(ui)
+    # Default: all players are human-controlled via curses UI
+    for p in game.players:
+        p.strategy = HumanCursesStrategy(ui)
 
-    # Bot player
+    # Example bot setup (optional):
     # game.players[1].strategy = DisplayWrapperStrategy(game.players[1].strategy, ui)
 
     with ui.session():
