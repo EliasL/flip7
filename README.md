@@ -17,5 +17,5 @@ pip install -r requirements.txt
 ```
 3. Running the Project
 ```bash
-python main.py player1Name player2Name ...
+python main.py player1Name player2Name playerXName
 ```
