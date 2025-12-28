@@ -407,8 +407,8 @@ class CursesDisplay:
             for wrapped in self._wrap(p.hand, w - 3):
                 self._draw_highlighted_line(y, x + 2, wrapped, w - 3, base_attr=0)
                 y += 1
-
-            y += 1
+            if p.hand == []:
+                y += 1
 
         return y
 

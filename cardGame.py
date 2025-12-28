@@ -179,6 +179,9 @@ class Player:
         self.hand.addCard(newCard)
         return newCard
 
+    def emptyHand(self):
+        self.hand.clear()
+
     def __str__(self):
         # Add a bold effect to names
         return self.name
@@ -336,7 +339,7 @@ class Game(ABC):
         for p in self.players:
             p.isDone = False
             p.status = None
-            p.hand.clear()
+            p.emptyHand()
 
     def resetDeck(self):
         self.deck = self.newDeck()

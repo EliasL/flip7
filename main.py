@@ -50,7 +50,7 @@ class Flip7(Game):
             Flip7.TIMES_TWO: "green",
             "Busted": "red",
             "Passed": "green",
-            "Flipped seven": "green",
+            "Flip7": "green",
         }
 
     def newDeck(self):
@@ -101,6 +101,9 @@ class Flip7(Game):
         return obs
 
     def get_legal_actions(self, player: Player) -> list[Action]:
+        if player is None:
+            return []
+
         if all(p.isDone for p in self.players):
             return []
 
@@ -132,6 +135,8 @@ class Flip7(Game):
         return []
 
     def apply_action(self, action: Action) -> None:
+        if action is None:
+            return
         actor = action.acting_player
 
         match self.phase:
@@ -230,8 +235,9 @@ class Flip7(Game):
         # 7 unique
         if not player.isDone and len(player.hand.getNormalCards()) == 7:
             self.log(player, "managed to flip7!", color="green")
-            player.status = "Flipped seven"
+            player.status = "Flip7"
             self._end_round_for(player)
+            return new_card
 
         # Effects
         elif not player.isDone and new_card in Flip7.EFFECTS:
@@ -373,6 +379,7 @@ class Flip7(Game):
             handScore = self.getPlayerHandScore(p)
             self.log(p, "gets", handScore, "points")
             p.score += handScore
+            p.emptyHand()
 
     def play(self):
         super().play()
@@ -386,11 +393,9 @@ class Flip7(Game):
                 obs = self.get_observation()
                 legal = self.get_legal_actions(self.activePlayer)
                 chosen = self.activePlayer.strategy.choose_action(obs, legal)
-                self.activePlayer = None
-
+                self.apply_action(chosen)
                 if self.gameOver:
                     break
-                self.apply_action(chosen)
 
                 if self.phase == Flip7.PHASE_FLIP:
                     self.endTurn()
@@ -399,6 +404,7 @@ class Flip7(Game):
 
             else:
                 self.log("All players are done", color="magenta")
+                self.activePlayer = None
                 self.wait()
                 self.updatePlayerScores()
                 self.wait()
