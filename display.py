@@ -3,7 +3,6 @@ from __future__ import annotations
 import curses
 import io
 import re
-import time
 from dataclasses import dataclass
 from typing import Optional
 
@@ -62,10 +61,11 @@ class CursesDisplay:
         # Stored as (compiled_regex, color, style) in insertion order.
         self._log_highlights: list[tuple[re.Pattern[str], object, object]] = []
 
-        # Overwrite normal log function
+        # Overwrite functions
         game.log = self.curses_log
+        game.wait = self.curses_wait(game.wait)
 
-        if hasattr(game, "coloredWords"):
+        if game.coloredWords:
             for key, value in game.coloredWords.items():
                 self.add_log_highlight(key, color=value, style="bold")
 
@@ -222,6 +222,15 @@ class CursesDisplay:
 
         attr = self._build_attr(color=color, style=style)
         self.push_message(msg, attr=attr)
+
+    def curses_wait(self, superWait):
+        # We overwrite the games wait so that we update
+        # the screen when we wait
+        def wait(time=None):
+            self.render()
+            return superWait(time)
+
+        return wait
 
     def waitForKey(self) -> str:
         assert self._stdscr is not None
@@ -620,14 +629,11 @@ class DisplayWrapperStrategy(Strategy):
     Optionally sleeps briefly after each render to make the game observable.
     """
 
-    def __init__(self, inner: Strategy, display: CursesDisplay, delay_s: float = 0.15):
+    def __init__(self, inner: Strategy, display: CursesDisplay):
         super().__init__()
         self.inner = inner
         self.display = display
-        self.delay_s = delay_s
 
     def choose_action(self, obs: Observation, legal_actions: list[Action]) -> Action:
         self.display.render(obs, legal_actions)
-        if self.delay_s > 0:
-            time.sleep(self.delay_s)
         return self.inner.choose_action(obs, legal_actions)

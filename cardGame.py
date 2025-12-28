@@ -4,6 +4,7 @@ from abc import ABC, abstractmethod
 from enum import Enum, auto
 from dataclasses import dataclass
 from typing import Optional, Any
+from time import sleep
 
 
 class ActionType(Enum):
@@ -163,6 +164,8 @@ class Player:
         self._index = index
         self.strategy = None
 
+        self.cpu = False  #
+
     @property
     def i(self) -> int:
         """Stable index of the player within the game."""
@@ -202,6 +205,10 @@ class Game(ABC):
         self.gameOver = False  # Marks the end of the game
 
         self.openHands = False
+        self.allCPUs = False
+        self.delayTime = 1.5
+
+        self.coloredWords = None
 
     @abstractmethod
     def newDeck(self) -> Deck: ...
@@ -236,7 +243,10 @@ class Game(ABC):
         scores = [p.score for p in self.players]
         is_done = [p.isDone for p in self.players]
         # The hand of the active player
-        own_hand = [str(c) for c in self.activePlayer.hand]
+        if self.activePlayer:
+            own_hand = [str(c) for c in self.activePlayer.hand]
+        else:
+            own_hand = None
 
         other_hands: Optional[list[list[str]]]
         if open_hands:
@@ -260,6 +270,9 @@ class Game(ABC):
             other_hands=other_hands,
             extras=None,
         )
+
+    def play(self):
+        self.allCPUs = all([p.cpu for p in self.players])
 
     def get_legal_actions(self, player: Player) -> list[Action]:
         """Return the list of legal actions for the given player.
@@ -336,3 +349,10 @@ class Game(ABC):
 
     def log(self, *args, color=None, **kwargs):
         print(*args, **kwargs)
+
+    def wait(self, time=None):
+        if time is None:
+            time = self.delayTime
+        # Deactivate wait if there are only cpus
+        if not self.allCPUs:
+            sleep(time)

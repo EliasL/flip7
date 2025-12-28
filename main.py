@@ -15,8 +15,8 @@ from display import CursesDisplay, HumanCursesStrategy, DisplayWrapperStrategy  
 
 class Flip7(Game):
     FREEZE = "Freeze"
-    FLIP_THREE = "Flip three"
-    SECOND_CHANCE = "Second chance"
+    FLIP_THREE = "Flip-three"
+    SECOND_CHANCE = "Second-chance"
     TIMES_TWO = "x2"
 
     EFFECTS = [FREEZE, FLIP_THREE]
@@ -50,6 +50,7 @@ class Flip7(Game):
             Flip7.TIMES_TWO: "green",
             "Busted": "red",
             "Passed": "green",
+            "Flipped seven": "green",
         }
 
     def newDeck(self):
@@ -229,6 +230,7 @@ class Flip7(Game):
         # 7 unique
         if not player.isDone and len(player.hand.getNormalCards()) == 7:
             self.log(player, "managed to flip7!", color="green")
+            player.status = "Flipped seven"
             self._end_round_for(player)
 
         # Effects
@@ -362,8 +364,8 @@ class Flip7(Game):
             for c in player.hand:
                 if not c.special or "+" in c.value:
                     score += int(c)
-                if c.value == Flip7.TIMES_TWO:
-                    score *= 2
+            if Flip7.TIMES_TWO in player.hand:
+                score *= 2
             return score
 
     def updatePlayerScores(self):
@@ -373,6 +375,8 @@ class Flip7(Game):
             p.score += handScore
 
     def play(self):
+        super().play()
+
         self.phase = Flip7.PHASE_FLIP
         self._pending_effect = None
         self._pending_effect_owner = None
@@ -382,6 +386,8 @@ class Flip7(Game):
                 obs = self.get_observation()
                 legal = self.get_legal_actions(self.activePlayer)
                 chosen = self.activePlayer.strategy.choose_action(obs, legal)
+                self.activePlayer = None
+
                 if self.gameOver:
                     break
                 self.apply_action(chosen)
@@ -393,8 +399,9 @@ class Flip7(Game):
 
             else:
                 self.log("All players are done", color="magenta")
+                self.wait()
                 self.updatePlayerScores()
-
+                self.wait()
                 self.endRound()
                 self.phase = Flip7.PHASE_FLIP
                 self._pending_effect = None
@@ -432,6 +439,7 @@ if __name__ == "__main__":
 
     # Example bot setup (optional):
     # game.players[1].strategy = DisplayWrapperStrategy(game.players[1].strategy, ui)
+    # game.players[1].cpu = True
 
     with ui.session():
         game.play()
