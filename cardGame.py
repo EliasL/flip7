@@ -35,6 +35,7 @@ class Observation:
 
     actingPlayer: Player  # The acting player
     turnPlayer: Player
+    leadingPlayer: Player
     nr_players_still_playing: int
     phase: str
     round: int
@@ -160,7 +161,7 @@ class Player:
         self.isDone = False
         self.status = None
         self.score = 0
-        self.name = name
+        self.name = str(name)
         self._index = index
         self.strategy = None
 
@@ -212,6 +213,7 @@ class Game(ABC):
         self.delayTime = 1.5
 
         self.coloredWords = None
+        self.showLog = True
 
     @abstractmethod
     def newDeck(self) -> Deck: ...
@@ -262,6 +264,7 @@ class Game(ABC):
         return Observation(
             actingPlayer=self.activePlayer,
             turnPlayer=self.turnPlayer,
+            leadingPlayer=self.getLeader(),
             nr_players_still_playing=self.nrPlayersStillPlaying,
             phase=self.phase,
             round=self.round,
@@ -276,6 +279,9 @@ class Game(ABC):
 
     def play(self):
         self.allCPUs = all([p.cpu for p in self.players])
+        # Ensure every player has a strategy
+        for p in self.players:
+            assert p.strategy is not None, "Give the player a strategy!"
 
     def get_legal_actions(self, player: Player) -> list[Action]:
         """Return the list of legal actions for the given player.
@@ -350,8 +356,9 @@ class Game(ABC):
         for p in players:
             self.log(p.name, p.score, sep=": ")
 
-    def log(self, *args, color=None, **kwargs):
-        print(*args, **kwargs)
+    def log(self, *args, **kwargs):
+        if self.showLog:
+            print(*args, **kwargs)
 
     def wait(self, time=None):
         if time is None:

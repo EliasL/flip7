@@ -619,21 +619,3 @@ class HumanCursesStrategy(Strategy):
 
     def choose_action(self, obs: Observation, legal_actions: list[Action]) -> Action:
         return self.display.choose_action(obs, legal_actions)
-
-
-class DisplayWrapperStrategy(Strategy):
-    """Wrap any other strategy to render the UI before it picks an action.
-
-    Useful to *watch* bots.
-
-    Optionally sleeps briefly after each render to make the game observable.
-    """
-
-    def __init__(self, inner: Strategy, display: CursesDisplay):
-        super().__init__()
-        self.inner = inner
-        self.display = display
-
-    def choose_action(self, obs: Observation, legal_actions: list[Action]) -> Action:
-        self.display.render(obs, legal_actions)
-        return self.inner.choose_action(obs, legal_actions)
